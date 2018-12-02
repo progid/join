@@ -1,3 +1,3 @@
 function res() {
-	alert('Hello, results');
+	alert('Hello, reslts');
 }
