@@ -9,17 +9,31 @@ __author__ = "Igor Terletskiy"
 __version__ = "0.0.1"
 __license__ = "MIT"
 
-def parseHTMLAttrs(tag):
-	
 
-def parseHTMLTags(file):
+tags = {
+	'script': 'script',
+	'link': 'style',	
+}
 
+def getPathsFrom(content, directory):
+	pathsFromTags = []
+	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
+	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
+	rawTagsList = re.findall(findTagsPattern, content)
+	for i in rawTagsList:
+		pathsFromTags.append(directory + '/' + re.sub(r'.*?\=', '', re.findall(pathsAttrPattern + r'".*?"', i)[0])[1:-1])
+	print(pathsFromTags)
+	for i in pathsFromTags:
+		t = open(i, 'r+')
+		print('********************\n', t.read(), '********************\n')
+	return pathsFromTags
 
-def analyseDependencies(filesList):
+def walk(filesList):
 	for key in filesList:
 		file = open(key, 'r+')
 		content = file.read()
-		
+		appendPaths = getPathsFrom(content, key[0:key.rfind('/')])
+
 
 def getListOfFiles(dir, extentions):
 	list = []
@@ -35,7 +49,7 @@ def main():
 	directories = sys.argv[1:] if len(sys.argv) > 1 else ['.']
 	extentions = ['html']
 	filesList = getListOfFiles(directories, extentions)
-	analyseDependencies(filesList)
+	walk(filesList)
 
 if __name__ == "__main__":
 	""" This is executed when run from the command line """
