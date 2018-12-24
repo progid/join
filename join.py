@@ -9,31 +9,43 @@ __author__ = "Igor Terletskiy"
 __version__ = "0.0.1"
 __license__ = "MIT"
 
+def makeStyle(styles):
+	return '<style>' + styles + '</style>'
 
-tags = {
-	'script': 'script',
-	'link': 'style',	
-}
+def makeScript(script):
+	return '<script>' + script
 
-def getPathsFrom(content, directory):
+def makeLinkFor(tag, content):
+	if tag == 'script':
+		return makeScript(content)
+	elif tag == 'link':
+		return makeStyle(content)
+	else:
+		return ''
+
+def getPathsFrom(file, directory):
+	content = file.read()
 	pathsFromTags = []
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
 	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
 	rawTagsList = re.findall(findTagsPattern, content)
 	for i in rawTagsList:
-		pathsFromTags.append(directory + '/' + re.sub(r'.*?\=', '', re.findall(pathsAttrPattern + r'".*?"', i)[0])[1:-1])
-	print(pathsFromTags)
-	for i in pathsFromTags:
-		t = open(i, 'r+')
-		print('********************\n', t.read(), '********************\n')
+		tag = re.findall(r'<\w+', i)[0][1:]
+		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
+		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
+		tempFile = open(path, 'r+')
+		content = content.replace(i, makeLinkFor(tag, tempFile.read()))
+	file.seek(0)
+	file.write(content)
+	file.truncate()
+	file.close()
+		
 	return pathsFromTags
 
 def walk(filesList):
 	for key in filesList:
 		file = open(key, 'r+')
-		content = file.read()
-		appendPaths = getPathsFrom(content, key[0:key.rfind('/')])
-
+		appendPaths = getPathsFrom(file, key[0:key.rfind('/')])
 
 def getListOfFiles(dir, extentions):
 	list = []
