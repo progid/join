@@ -29,17 +29,17 @@ def getPathsFrom(file, directory):
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
 	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
 	rawTagsList = re.findall(findTagsPattern, content)
+	print(directory, 'xxx')
 	for i in rawTagsList:
 		tag = re.findall(r'<\w+', i)[0][1:]
 		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
 		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
 		tempFile = open(path, 'r+')
 		content = content.replace(i, makeLinkFor(tag, tempFile.read()))
-	file.seek(0)
-	file.write(content)
-	file.truncate()
-	file.close()
-		
+	# file.seek(0)
+	# file.write(content)
+	# file.truncate()
+	# file.close()
 	return pathsFromTags
 
 def walk(filesList):
