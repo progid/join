@@ -23,7 +23,7 @@ def makeLinkFor(tag, content):
 	else:
 		return ''
 
-def getPathsFrom(file, filename, buildDir):
+def getPathsFrom(file, directory, filename, buildDir):
 	content = file.read()
 	buildFile = open(buildDir + filename, 'w+')
 	pathsFromTags = []
@@ -48,7 +48,7 @@ def getPathsFrom(file, filename, buildDir):
 def walk(filesList, buildDir = 'build'):
 	for key in filesList:
 		file = open(key, 'r+')
-		appendPaths = getPathsFrom(file, key[key.rfind('/'):], buildDir)
+		appendPaths = getPathsFrom(file, key[0:key.rfind('/')], key[key.rfind('/'):], buildDir)
 
 def getListOfFiles(dir, extentions):
 	list = []
