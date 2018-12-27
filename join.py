@@ -3,7 +3,7 @@
 Module Docstring
 """
 
-import re, sys, os, json, copy, zlib, string, random, math
+import re, sys, os, json, copy, zlib, string, random, math, shutil
 
 __author__ = "Igor Terletskiy"
 __version__ = "0.0.1"
@@ -23,29 +23,32 @@ def makeLinkFor(tag, content):
 	else:
 		return ''
 
-def getPathsFrom(file, directory):
+def getPathsFrom(file, filename, buildDir):
 	content = file.read()
+	buildFile = open(buildDir + filename, 'w+')
 	pathsFromTags = []
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
 	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
 	rawTagsList = re.findall(findTagsPattern, content)
+	print(filename)
 	for i in rawTagsList:
 		tag = re.findall(r'<\w+', i)[0][1:]
 		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
 		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
 		tempFile = open(path, 'r+')
 		content = content.replace(i, makeLinkFor(tag, tempFile.read()))
-	file.seek(0)
-	file.write(content)
-	file.truncate()
+	buildFile.seek(0)
+	buildFile.write(content)
+	buildFile.truncate()
+	buildFile.close()
 	file.close()
 		
 	return pathsFromTags
 
-def walk(filesList):
+def walk(filesList, buildDir = 'build'):
 	for key in filesList:
 		file = open(key, 'r+')
-		appendPaths = getPathsFrom(file, key[0:key.rfind('/')])
+		appendPaths = getPathsFrom(file, key[key.rfind('/'):], buildDir)
 
 def getListOfFiles(dir, extentions):
 	list = []
@@ -57,8 +60,22 @@ def getListOfFiles(dir, extentions):
 						list.append(root + '/' + filename)
 	return list
 
+def makeBuild(dirname = 'build'):
+	if not os.path.isdir(dirname):
+		os.mkdir(dirname)
+		print('Directory "' + dirname + '" was successfully created.')
+	else:
+		print('Directory "' + dirname + '" already exists.')
+		print('Removing...')
+		shutil.rmtree(dirname)
+		print('Removed')
+		print('Creating new directory....')
+		os.mkdir(dirname)
+		print('Created new "' + dirname + '" directory.')
+
 def main():
 	directories = sys.argv[1:] if len(sys.argv) > 1 else ['.']
+	makeBuild()
 	extentions = ['html']
 	filesList = getListOfFiles(directories, extentions)
 	walk(filesList)
