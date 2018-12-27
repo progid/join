@@ -1,0 +1,6 @@
+cssmin==0.2.0
+html5lib==0.9999999
+htmlmin==0.1.12
+jsmin==2.2.2
+jsonpickle==0.9.6
+

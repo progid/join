@@ -3,17 +3,17 @@
 Module Docstring
 """
 
-import re, sys, os, json, copy, zlib, string, random, math, shutil
+import re, sys, os, json, copy, zlib, string, random, math, shutil, htmlmin, cssmin, jsmin
 
 __author__ = "Igor Terletskiy"
 __version__ = "0.0.1"
 __license__ = "MIT"
 
 def makeStyle(styles):
-	return '<style>' + styles + '</style>'
+	return '<style>' + cssmin.cssmin(styles) + '</style>'
 
 def makeScript(script):
-	return '<script>' + script
+	return '<script>' + jsmin.jsmin(script)
 
 def makeAnchorLink(filepath):
 	return '<a href="' + filepath[filepath.rfind('/') + 1:] + '">'
@@ -41,7 +41,7 @@ def getPathsFrom(content, directory, filename, buildDir):
 		linkContent = makeLinkFor(tag, path)
 		content = content.replace(i, linkContent if linkContent else i)
 	buildFile = open(buildDir + filename, 'w+')
-	buildFile.write(content)
+	buildFile.write(htmlmin.minify(content))
 	buildFile.close()
 	return True
 
