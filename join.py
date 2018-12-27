@@ -15,13 +15,19 @@ def makeStyle(styles):
 def makeScript(script):
 	return '<script>' + script
 
-def makeLinkFor(tag, content):
+def makeAnchorLink(filepath):
+	return '<a href="' + filepath[filepath.rfind('/') + 1:] + '">'
+
+def makeLinkFor(tag, filepath):
+	content = open(filepath, 'r+').read()
 	if tag == 'script':
 		return makeScript(content)
 	elif tag == 'link':
 		return makeStyle(content)
+	elif tag == 'a':
+		return makeAnchorLink(filepath)
 	else:
-		return ''
+		return False
 
 def getPathsFrom(content, directory, filename, buildDir):
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
@@ -32,7 +38,8 @@ def getPathsFrom(content, directory, filename, buildDir):
 		tag = re.findall(r'<\w+', i)[0][1:]
 		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
 		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
-		content = content.replace(i, makeLinkFor(tag, open(path, 'r+').read()))
+		linkContent = makeLinkFor(tag, path)
+		content = content.replace(i, linkContent if linkContent else i)
 	buildFile = open(buildDir + filename, 'w+')
 	buildFile.write(content)
 	buildFile.close()
