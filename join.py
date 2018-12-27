@@ -23,10 +23,7 @@ def makeLinkFor(tag, content):
 	else:
 		return ''
 
-def getPathsFrom(file, directory, filename, buildDir):
-	content = file.read()
-	buildFile = open(buildDir + filename, 'w+')
-	pathsFromTags = []
+def getPathsFrom(content, directory, filename, buildDir):
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
 	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
 	rawTagsList = re.findall(findTagsPattern, content)
@@ -35,20 +32,17 @@ def getPathsFrom(file, directory, filename, buildDir):
 		tag = re.findall(r'<\w+', i)[0][1:]
 		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
 		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
-		tempFile = open(path, 'r+')
-		content = content.replace(i, makeLinkFor(tag, tempFile.read()))
-	buildFile.seek(0)
+		content = content.replace(i, makeLinkFor(tag, open(path, 'r+').read()))
+	buildFile = open(buildDir + filename, 'w+')
 	buildFile.write(content)
-	buildFile.truncate()
 	buildFile.close()
-	file.close()
-		
-	return pathsFromTags
+	return True
 
 def walk(filesList, buildDir = 'build'):
 	for key in filesList:
 		file = open(key, 'r+')
-		appendPaths = getPathsFrom(file, key[0:key.rfind('/')], key[key.rfind('/'):], buildDir)
+		appendPaths = getPathsFrom(file.read(), key[0:key.rfind('/')], key[key.rfind('/'):], buildDir)
+		file.close()
 
 def getListOfFiles(dir, extentions):
 	list = []
@@ -61,17 +55,9 @@ def getListOfFiles(dir, extentions):
 	return list
 
 def makeBuild(dirname = 'build'):
-	if not os.path.isdir(dirname):
-		os.mkdir(dirname)
-		print('Directory "' + dirname + '" was successfully created.')
-	else:
-		print('Directory "' + dirname + '" already exists.')
-		print('Removing...')
+	if os.path.isdir(dirname):
 		shutil.rmtree(dirname)
-		print('Removed')
-		print('Creating new directory....')
-		os.mkdir(dirname)
-		print('Created new "' + dirname + '" directory.')
+	os.mkdir(dirname)
 
 def main():
 	directories = sys.argv[1:] if len(sys.argv) > 1 else ['.']
