@@ -1,24 +1,13 @@
 import re, os, shutil, htmlmin, cssmin, jsmin
 
-def makeStyle(styles):
-	return '<style>' + cssmin.cssmin(styles) + '</style>'
-
-def makeScript(script):
-	return '<script>' + jsmin.jsmin(script)
-
-def makeAnchorLink(filepath):
-	return '<a href="' + filepath[filepath.rfind('/') + 1:] + '">'
+linkers = {
+	'script': lambda c: '<script>' + jsmin.jsmin(c),
+	'link': lambda c: '<style>' + cssmin.cssmin(c) + '</style>'
+}
 
 def makeLinkFor(tag, filepath):
 	content = open(filepath, 'r+').read()
-	if tag == 'script':
-		return makeScript(content)
-	elif tag == 'link':
-		return makeStyle(content)
-	elif tag == 'a':
-		return makeAnchorLink(filepath)
-	else:
-		return False
+	return linkers[tag](content) if tag in linkers else False
 
 def getPathsFrom(content, directory, filename, buildDir):
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
