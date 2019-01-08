@@ -8,18 +8,20 @@ assetTypes = {
 }
 
 linkers = {
-	'script': lambda c, b: '<script>' + jsmin.jsmin(c),
-	'link': lambda c, b: '<style>' + resolveCSSDependencies(cssmin.cssmin(c), b) + '</style>'
+	'script': lambda c: '<script>' + jsmin.jsmin(c),
+	'link': lambda c: '<style>' + cssmin.cssmin(c) + '</style>'
 }
 
 def createFolder(dirname, removeIfExists = True):
-	if os.path.isdir(dirname):
+	if os.path.isdir(dirname) and removeIfExists:
 		shutil.rmtree(dirname)
+	elif os.path.isdir(dirname) and not removeIfExists:
+		return False
 	os.mkdir(dirname)
 
 def makeLinkFor(tag, filepath, buildDir):
-	content = open(filepath, 'r+').read()
-	return linkers[tag](content, buildDir) if tag in linkers else False
+	content = resolveCSSDependencies(open(filepath, 'r+').read(), buildDir, filepath)
+	return linkers[tag](content) if tag in linkers else False
 
 def saveHTMLBuildFile(pathname, content):
 	buildFile = open(pathname, 'w+')
@@ -30,16 +32,20 @@ def resolveHTMLFilePathFor(tag, path):
 	link = path[path.find('"') + 1:path.rfind('"')]
 	return tag.replace(link, link[link.rfind('/') + 1:])
 
-def resolveCSSDependencies(content, dirname):
+def resolveCSSDependencies(content, dirname, filepath):
 	assetsPath = dirname + '/assets'
-	createFolder(assetsPath)
+	fileFolder = filepath[:filepath.rfind('/')+1]
 	paths = re.findall('url' + r'[\r\n\b\t\s]*' + r'\(' + r'.*?' + r'\)', content)
 	for i in paths:
 		rawFilePath = i[i.find('url(')+4:i.rfind(')')]
 		preparedFilePath = rawFilePath[1:-1] if rawFilePath[0] in ['\'', '"', '`'] else rawFilePath
-		filetype = preparedFilePath[preparedFilePath.rfind('.'):]
-		print(filetype)
-	print('\n*******************************\n')
+		filetype = preparedFilePath[preparedFilePath.rfind('.')+1:]
+		filename = preparedFilePath[preparedFilePath.rfind('/')+1:preparedFilePath.rfind('.')]
+		for i in assetTypes:
+			if filetype in assetTypes[i]:
+				createFolder(assetsPath + '/' + i, False)
+				shutil.copy(fileFolder + preparedFilePath, assetsPath + '/' + i + '/')
+				content = content.replace(preparedFilePath, 'assets/' + i + '/' + filename + '.' + filetype)
 	return content
 
 def getPathsFrom(content, directory, filename, buildDir):
@@ -75,5 +81,6 @@ def getListOfFiles(dir, extentions):
 
 def makeBuild(directories, extentions, dirname = 'build'):
 	createFolder(dirname)
+	createFolder(dirname + '/assets')
 	filesList = getListOfFiles(directories, extentions)
 	walk(filesList, dirname)
