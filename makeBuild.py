@@ -9,26 +9,34 @@ def makeLinkFor(tag, filepath):
 	content = open(filepath, 'r+').read()
 	return linkers[tag](content) if tag in linkers else False
 
+def saveHTMLBuildFile(pathname, content):
+	buildFile = open(pathname, 'w+')
+	buildFile.write(htmlmin.minify(content))
+	buildFile.close()
+
+def resolveHTMLFilePathFor(tag, path):
+	link = path[path.find('"') + 1:path.rfind('"')]
+	return tag.replace(link, link[link.rfind('/') + 1:])
+
 def getPathsFrom(content, directory, filename, buildDir):
 	pathsAttrPattern = r'(?:(?:href=)|(?:src=))'
 	findTagsPattern = r'<.*?' + pathsAttrPattern + r'.*?>'
 	rawTagsList = re.findall(findTagsPattern, content)
-	print(filename)
 	for i in rawTagsList:
 		tag = re.findall(r'<\w+', i)[0][1:]
 		link = re.findall(pathsAttrPattern + r'".*?"', i)[0]
 		path = directory + '/' + re.sub(r'.*?\=', '', link)[1:-1]
 		linkContent = makeLinkFor(tag, path)
-		content = content.replace(i, linkContent if linkContent else i)
-	buildFile = open(buildDir + filename, 'w+')
-	buildFile.write(htmlmin.minify(content))
-	buildFile.close()
+		linkContent = linkContent if linkContent else resolveHTMLFilePathFor(i, link)
+		content = content.replace(i, linkContent)
+		saveHTMLBuildFile(buildDir + filename, content)
 	return True
 
-def walk(filesList, buildDir = 'build'):
+def walk(filesList, buildDir):
 	for key in filesList:
 		file = open(key, 'r+')
-		appendPaths = getPathsFrom(file.read(), key[0:key.rfind('/')], key[key.rfind('/'):], buildDir)
+		lastSlash = key.rfind('/')
+		appendPaths = getPathsFrom(file.read(), key[:lastSlash], key[lastSlash:], buildDir)
 		file.close()
 
 def getListOfFiles(dir, extentions):
@@ -46,4 +54,4 @@ def makeBuild(directories, extentions, dirname = 'build'):
 		shutil.rmtree(dirname)
 	os.mkdir(dirname)
 	filesList = getListOfFiles(directories, extentions)
-	walk(filesList)
+	walk(filesList, dirname)
