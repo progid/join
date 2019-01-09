@@ -1,0 +1,8 @@
+{
+	"entry": "./",
+	"useMinification": true,
+	"lazyLoad": true,
+	"rootNode": {
+		"type": "div"
+	}
+}
