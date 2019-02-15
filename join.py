@@ -15,8 +15,7 @@ __license__ = "MIT"
 def main():
 	directories = sys.argv[1:] if len(sys.argv) > 1 else ['.']
 	makeBuild(directories, ['html'])
-	config = loadConfig('./linker.config.json')
-	print(config)
+	addChunks()
 
 if __name__ == "__main__":
 	""" This is executed when run from the command line """
