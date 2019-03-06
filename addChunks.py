@@ -67,7 +67,7 @@ def getEntryFile(entry, rootPath):
 def buildOutputFile(entry, rootPath, routes, filename = 'index.html'):
 	entryfile = prepareDictToDOM(getEntryFile(entry, rootPath))
 	y = '<script>function setRoute(e) {document.head.innerHTML = window.__ROUTES[e.currentTarget.getAttribute(\'data-routepath\')].head; document.body.innerHTML = window.__ROUTES[e.currentTarget.getAttribute(\'data-routepath\')].body;}; window.__ROUTES = (' + json.dumps(routes, sort_keys=True, indent=4, ensure_ascii=False).replace('</script>', r'<\/script>') + ') </script>'
-	html = '<!DOCTYPE html><html><head>' + entryfile[entry]['head'] + '</head><body>' + entryfile[entry]['body'] + y + '</body></html>'
+	html = '<!DOCTYPE html><html><head>' + y + entryfile[entry]['head'] + '</head><body>' + entryfile[entry]['body'] + '</body></html>'
 	output = open(rootPath + '/' + filename, 'w+')
 	output.write(html)
 	output.close()
